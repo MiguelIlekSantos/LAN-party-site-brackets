@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="shortcut icon" href="icon.png">
+  <link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.2.0/css/font-awesome.min.css" rel="stylesheet">
+  <link href='https://fonts.googleapis.com/css?family=Holtwood+One+SC' rel='stylesheet' type='text/css'>
+  <link href='https://fonts.googleapis.com/css?family=Kaushan+Script|Herr+Von+Muellerhoff' rel='stylesheet' type='text/css'>
+  <link href='https://fonts.googleapis.com/css?family=Abel' rel='stylesheet' type='text/css'>
+  <link href='https://fonts.googleapis.com/css?family=Istok+Web|Roboto+Condensed:700' rel='stylesheet' type='text/css'>
+  <link rel="stylesheet" href="style.css">
+  <title>LAN Party Braket</title>
+</head>
+<body>
+  <header class="hero">
+    <div class="hero-wrap">
+      <p class="intro" id="intro">LAN</p>
+      <h1 id="headline">PARTY</h1>
+      <p class="year"><i class="fa fa-star"></i> 2024 <i class="fa fa-star"></i></p>
+      <p>ESJCFF</p>
+    </div>
+  </header>
+
+  <div class="buttons">
+    <button onclick="showBracket('cs', 'CS 1.6')" class="button">CS 1.6</button>
+    <button onclick="showBracket('fifa23', 'FIFA 23')" class="button">FIFA 23</button>
+    <button onclick="showBracket('mario', 'MARIO KART')" class="button">MARIO KART</button>
+    <button onclick="showBracket('mortal', 'MORTAL COMBAT')" class="button">MORTAL COMBAT</button>
+        <button onclick="showBracket('fifastreet', 'FIFA STREET')" class="button">FIFA STREET</button>
+  </div>
+
+  <h2 id="currentBracketTitle" class="game">CS 1.6</h2>
+
+  <section id="bracket">
+    <div class="container">
+      <div class="split split-one" id="splitContainer"></div>
+    </div>
+  </section>
+
+  <script>
+    const roundMapping = {
+    'round-one': 1,
+    'round-two': 2,
+    'round-three': 3,
+    'round-four': 4,
+    'round-five': 5
+    };
+
+    async function fetchBracketData(filename) {
+      const response = await fetch(`https://raw.githubusercontent.com/arients/LAN_Party/main/${filename}`);
+      if (!response.ok) {
+        throw new Error('Network response was not ok ' + response.statusText);
+      }
+      return await response.json();
+    }
+
+    function clearBracket() {
+      const splitContainer = document.getElementById('splitContainer');
+      splitContainer.innerHTML = '';
+    }
+
+    function createTeamElement(className, teamName, score) {
+      const team = document.createElement('li');
+      team.classList.add('team', className);
+      team.textContent = teamName;
+      team.dataset.team = teamName;
+
+      if (score != 1) team.classList.add('loser');
+
+      const scoreblock = document.createElement('span');
+      scoreblock.classList.add('score');
+      scoreblock.textContent = score;
+
+      team.appendChild(scoreblock);
+      return team;
+    }
+
+    function createMatchElement(match) {
+      const matchup = document.createElement('ul');
+      matchup.classList.add('matchup');
+
+      const team1 = createTeamElement('team-top', match.team1.name, match.team1.score);
+      const team2 = createTeamElement('team-bottom', match.team2.name, match.team2.score);
+
+      const infoIcon = document.createElement('i');
+      infoIcon.classList.add('fa', 'fa-info-circle', 'info-icon');
+      infoIcon.setAttribute('title', `Time: ${match.time}`);
+
+      const tooltip = document.createElement('div');
+      tooltip.classList.add('tooltip');
+      tooltip.textContent = `Tempo: ${match.time}`;
+
+      infoIcon.appendChild(tooltip);
+      matchup.appendChild(team1);
+      matchup.appendChild(team2);
+      matchup.appendChild(infoIcon);
+
+      return matchup;
+    }
+
+    function highlightTeam(teamName, highlight) {
+      const teams = document.querySelectorAll('.team');
+      teams.forEach(team => {
+        if (team.dataset.team === teamName && teamName != "") {
+          if (highlight) {
+            team.classList.add('highlight');
+          } else {
+            team.classList.remove('highlight');
+          }
+        }
+      });
+    }
+
+    async function showBracket(filename, gameName) {
+      clearBracket();
+      try {
+        const data = await fetchBracketData(filename);
+        document.getElementById('currentBracketTitle').textContent = gameName;
+
+        const splitContainer = document.getElementById('splitContainer');
+        
+        data.rounds.forEach(round => {
+          const roundDiv = document.createElement('div');
+          roundDiv.classList.add('round', round.round, 'current');
+
+          const roundDetails = document.createElement('div');
+          roundDetails.classList.add('round-details');
+          roundDetails.innerHTML = `Rodada ${roundMapping[round.round.slice(0)]}<br /><span class="date">Maio 28</span>`;
+          roundDiv.appendChild(roundDetails);
+
+          round.matches.forEach(match => {
+            const matchup = createMatchElement(match);
+            roundDiv.appendChild(matchup);
+          });
+
+          splitContainer.appendChild(roundDiv);
+        });
+
+        const teams = document.querySelectorAll('.team');
+        teams.forEach(team => {
+          team.addEventListener('mouseenter', () => highlightTeam(team.dataset.team, true));
+          team.addEventListener('mouseleave', () => highlightTeam(team.dataset.team, false));
+        });
+      } catch (error) {
+        console.error('Error loading bracket data:', error);
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      showBracket('cs', 'CS 1.6');
+    });
+  </script>
+
+  <script>
+    document.write('<script src="http://' + (location.host || 'localhost').split(':')[0] + ':35729/livereload.js?snipver=1"></' + 'script>');
+  </script>
+</body>
+</html>
