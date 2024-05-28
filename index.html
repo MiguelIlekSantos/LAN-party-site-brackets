@@ -67,7 +67,7 @@
       team.textContent = teamName;
       team.dataset.team = teamName;
 
-      if (score != 1) team.classList.add('loser');
+      if (score == 0) team.classList.add('loser');
 
       const scoreblock = document.createElement('span');
       scoreblock.classList.add('score');
